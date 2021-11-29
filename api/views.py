@@ -5,6 +5,7 @@ from rest_framework.parsers import JSONParser
 from base64 import b64decode
 from loguru import logger
 from datetime import datetime as dt
+from os.path import isfile
 
 logger.add("logs.json", format="{time} {level} {message}", level="DEBUG", rotation="5 MB", compression="zip", serialize=True)
 @api_view(['POST'])
@@ -22,8 +23,11 @@ def pic_saver(request):
         decoded = b64decode(b64_e)
 
         date = dt.now().strftime("%d_%m_%Y")
-        #TODO remove to .env or get media place from setting 
-        with open(f"media/{date}_{ip}.png","wb") as f:
+        tmp = 0
+        f_path = f"media/{date}_{ip}_{tmp}.png"
+        if isfile(f_path):
+            tmp += 1
+        with open(f"media/{date}_{ip}_{tmp}.png","wb") as f:
             f.write(decoded)
         return JsonResponse({"status":"saved"}, status=200)
     except Exception as e:
