@@ -7,3 +7,4 @@ logs.json
 *.so
 media/
 static/
+api/migrations/

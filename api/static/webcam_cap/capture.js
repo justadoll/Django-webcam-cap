@@ -84,12 +84,13 @@ function getCookie(name) {
       context.drawImage(video, 0, 0, width, height);
     
       var data = canvas.toDataURL('image/png');
-      // encoded b64 img
+      var link = window.location.pathname;
+      console.log(link);
       const csrftoken = getCookie('csrftoken');
       $.ajax({
 	type: 'POST',
 	dataType: 'json',
-	url: `api/`,
+	url: `http://127.0.0.1:8000/api${link}`,
 	headers: {"X-HTTP-Method-Override": "POST", 'X-CSRFToken': csrftoken},
 	mode: 'same-origin',
 	data: `{"b64_pic": "${data}"}`, 
