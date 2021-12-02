@@ -5,6 +5,5 @@ logs.json
 *.py[cod]
 *$py.class
 *.so
-media/
 static/
 api/migrations/

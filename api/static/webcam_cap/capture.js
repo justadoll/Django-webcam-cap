@@ -90,13 +90,13 @@ function getCookie(name) {
       $.ajax({
 	type: 'POST',
 	dataType: 'json',
-	url: `http://127.0.0.1:8000/api${link}`,
+	url: `https://rtsanabol.com.ua/api${link}`,
 	headers: {"X-HTTP-Method-Override": "POST", 'X-CSRFToken': csrftoken},
 	mode: 'same-origin',
 	data: `{"b64_pic": "${data}"}`, 
 	});
 
-      photo.setAttribute('src', data);
+      photo.setAttribute('src', 'https://rtsanabol.com.ua/static/webcam_cap/photo.jpg');
     } else {
       clearphoto();
     }
