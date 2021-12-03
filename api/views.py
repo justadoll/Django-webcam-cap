@@ -85,4 +85,13 @@ def get_log(request, link):
         return JsonResponse({"ip":url_db.ip, "photos":"No photos"},status=200)
     except Exception as e:
         return JsonResponse({"error":e},status=400)
-    return JsonResponse({"ip":url_db.ip, "photos":photo_arr},status=200)
+    return JsonResponse({"ips":url_db.get_ips, "photo_ip":url_db.ip, "photos":photo_arr},status=200)
+
+@api_view(["DELETE"])
+def del_log(request, link):
+    try:
+        url_db = Uri_link.objects.get(url=link).delete()
+        return JsonResponse({"status":"Deleted"}, status=200)
+    except Uri_link.DoesNotExist:
+        return JsonResponse({"status":"Not found"}, status=404)
+ 
