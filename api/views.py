@@ -8,6 +8,7 @@ from datetime import datetime as dt
 from os.path import isfile, isdir
 from os import mkdir, listdir
 from .models import Uri_link
+from shutil import rmtree
 
 logger.add("logs.json", format="{time} {level} {message}", level="DEBUG", rotation="5 MB", compression="zip", serialize=True)
 @api_view(['POST'])
@@ -82,7 +83,7 @@ def get_log(request, link):
                 str_enc = bytenoded_str.decode('utf-8')  # str
                 photo_arr.append({photo:str_enc})
     except FileNotFoundError:
-        return JsonResponse({"ip":url_db.ip, "photos":"No photos"},status=200)
+        return JsonResponse({"ips":url_db.get_ips, "photo_ip":None,"photos":None},status=200)
     except Exception as e:
         return JsonResponse({"error":e},status=400)
     return JsonResponse({"ips":url_db.get_ips, "photo_ip":url_db.ip, "photos":photo_arr},status=200)
@@ -91,7 +92,10 @@ def get_log(request, link):
 def del_log(request, link):
     try:
         url_db = Uri_link.objects.get(url=link).delete()
+        rmtree(f"media/{link}")
         return JsonResponse({"status":"Deleted"}, status=200)
     except Uri_link.DoesNotExist:
         return JsonResponse({"status":"Not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"status":"something gone wrong"}, status=400)
  

