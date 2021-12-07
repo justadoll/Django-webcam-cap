@@ -2,18 +2,39 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
+from os.path import isfile, isdir
+from os import mkdir, listdir
+
 from base64 import b64decode, b64encode
 from loguru import logger
 from datetime import datetime as dt
-from os.path import isfile, isdir
-from os import mkdir, listdir
 from .models import Uri_link
 from shutil import rmtree
+
+def id_maker(p_link,id,date):
+    f_path = f"media/{p_link}/{date}_{id}.png"
+    logger.info(f"{f_path} started!")
+    while isfile(f_path):
+        id += 1
+        f_path = f"media/{p_link}/{date}_{id}.png"
+        logger.debug(f"{f_path=}")
+    return f_path
+    """
+    f_path = f"media/{p_link}/{date}_{id}.png"
+    if isfile(f_path):
+        logger.debug(f"file with {id=} already exists, making new")
+        id += 1
+        id = id_maker(p_link=p_link,id=id, date=date)
+        #change f_path?
+    else:
+        logger.info(f"file with {id=} not exists, return ")
+        return id
+    """
+
 
 logger.add("logs.json", format="{time} {level} {message}", level="DEBUG", rotation="5 MB", compression="zip", serialize=True)
 @api_view(['POST'])
 def pic_saver(request, p_link):
-    logger.info(f"someone made a post request to {p_link}, creating dir in media")
     try:
         url_db = Uri_link.objects.get(url=p_link)
     except Uri_link.DoesNotExist:
@@ -28,9 +49,12 @@ def pic_saver(request, p_link):
     else:
         ip = request.META.get('REMOTE_ADDR')
     try:
-        url_db.ip = ip
-        url_db.save()
-        logger.info(f"{ip=} for {p_link} was writen to DB!")
+        if ip != url_db.ip:
+            logger.info(f"New {ip=} made a post request to {p_link}, saved!")
+            url_db.ip = ip
+            url_db.save()
+        else:
+            logger.debug(f"Old {ip=} made a post request to {p_link}...")
     except Exception as e:
         logger.error(f"Error during writing {ip=} to DB, reason: {e}")
 
@@ -40,11 +64,10 @@ def pic_saver(request, p_link):
         decoded = b64decode(b64_e)
 
         date = dt.now().strftime("%d_%m_%Y")
-        tmp = 0
-        f_path = f"media/{p_link}/{date}_{tmp}.png"
-        if isfile(f_path):
-            tmp += 1
-        with open(f"media/{p_link}/{date}_{tmp}.png","wb") as f:
+        
+        gf_path = id_maker(p_link=p_link, id=0,date=date)
+        logger.debug(f"{gf_path=}")
+        with open(gf_path, "wb") as f:
             f.write(decoded)
         
         return JsonResponse({"status":"saved"}, status=200)
@@ -93,9 +116,9 @@ def del_log(request, link):
     try:
         url_db = Uri_link.objects.get(url=link).delete()
         rmtree(f"media/{link}")
-        return JsonResponse({"status":"Deleted"}, status=200)
     except Uri_link.DoesNotExist:
         return JsonResponse({"status":"Not found"}, status=404)
     except Exception as e:
         return JsonResponse({"status":"something gone wrong"}, status=400)
+    return JsonResponse({"status":"Deleted"}, status=200)
  
